@@ -1,49 +1,95 @@
-# Dev Bootstrap POC
+# Dev Bootstrap
 
-This repo provides a **proof-of-concept bootstrap for your development environment**.  
-It discovers repositories from GitHub and GitLab, reads `.repo-meta.yml` for folder placement,  
-and organizes them under `~/code`.
+Discovers repositories from GitHub and/or GitLab, reads `.repo-meta.yml` metadata from each repo, and organizes them under `~/code/<dev_path>/`.
+
+```
+gh repo list / GitLab API
+        ↓
+  git clone --depth 1
+        ↓
+  read .repo-meta.yml
+        ↓
+  ~/code/<dev_path>/<repo-name>
+```
 
 ---
 
 ## Requirements
 
-- Git
-- GitHub CLI (`gh`) - https://cli.github.com/
-- `yq` for YAML parsing (`brew install yq`)
-- `jq` for JSON parsing (`brew install jq`)
-- GitLab personal access token (for `discover-gitlab.sh`) as `$GITLAB_TOKEN`
+- Python ≥ 3.14 + [Poetry](https://python-poetry.org/)
+- [GitHub CLI (`gh`)](https://cli.github.com/) — for GitHub discovery (`brew install gh && gh auth login`)
+- GitLab personal access token in `$GITLAB_TOKEN` — for GitLab discovery
 
 ---
 
-## Setup
-
-1. Clone this bootstrap repo:
+## Install
 
 ```bash
 git clone git@github.com:you/dev-bootstrap.git
 cd dev-bootstrap
+poetry install
 ```
 
+---
 
-2. Run the bootstrap:
+## Usage
+
+### Bootstrap from GitHub
+
+Discovers all repos for a GitHub user or organisation, clones them, and places them under `~/code`:
 
 ```bash
-./bootstrap.sh
+poetry run dev bootstrap --github-user <your-github-username>
 ```
 
-Repos are placed in ~/code/<dev_path_from_repo-meta>
-Only .repo-meta.yml is downloaded initially (fast bootstrap)
-Full code can be fetched later on-demand
+### Bootstrap from GitLab
 
-Each repo should contain a .repo-meta.yml file like:
+```bash
+export GITLAB_TOKEN=<your-token>
+poetry run dev bootstrap --gitlab-url https://gitlab.example.com
+```
+
+### Bootstrap from both at once
+
+```bash
+poetry run dev bootstrap --github-user <user> --gitlab-token <token> --gitlab-url https://gitlab.example.com
+```
+
+### Update all repos
+
+Fetches full history (unshallows) and pulls every repo already under `~/code`:
+
+```bash
+poetry run dev update
+```
+
+### Help
+
+```bash
+poetry run dev --help
+poetry run dev bootstrap --help
+```
+
+---
+
+## How repos are placed
+
+Each repo can contain a `.repo-meta.yml` file that controls where it lands locally:
 
 ```yaml
-dev_path: backend/payments
-type: service
-team: platform
-language: go
+name: my-app
+dev_path: work/apps   # → cloned to ~/code/work/apps/my-app
+role: project
+tags: [python]
+language: python
+setup:
+  - pip install -e .
+env: []
+services: []
+depends_on: []
 ```
 
-dev_path → local folder placement
-Other fields can be used for automation (CI, dashboards, etc.)
+| `dev_path` value | Local path |
+|---|---|
+| `work/apps` | `~/code/work/apps/<name>` |
+| *(empty or missing)* | `~/code/misc/<name>` |

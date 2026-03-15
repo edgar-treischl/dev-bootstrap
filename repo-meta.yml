@@ -1,0 +1,17 @@
+name: dev-bootstrap
+description: reinforcement learning simulation environment
+dev_path: []
+role: project
+tags:
+  - setup
+language: python
+setup:
+  - pip install -e .
+  - pre-commit install
+env:
+  - .env.example
+services: []
+depends_on: []
+workspace: []
+update_strategy: []
+priority: []

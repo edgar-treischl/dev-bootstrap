@@ -4,7 +4,8 @@ TMP="$BASE/_tmp"
 mkdir -p "$TMP"
 
 # Combine GitHub + GitLab repos
-REPOS=$(./discover-github.sh; ./discover-gitlab.sh)
+#REPOS=$(./discover-github.sh; ./discover-gitlab.sh)
+REPOS=$(./discover-github.sh)
 
 for url in $REPOS; do
     name=$(basename "$url" .git)
