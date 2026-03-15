@@ -1,10 +1,11 @@
 import os
+from pathlib import Path
 from typing import Optional
 
 import typer
 
 from devbootstrap.bootstrap import bootstrap as _bootstrap
-from devbootstrap.bootstrap import update_all
+from devbootstrap.bootstrap import scan_repos, update_all
 
 app = typer.Typer(help="dev-bootstrap: manage your multi-repo development environment.")
 
@@ -30,3 +31,23 @@ def bootstrap(
 def update():
     """Fetch full history and pull every repo under ~/code."""
     update_all()
+
+
+@app.command()
+def scan(
+    output: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="Export the result as a CSV file to this path."
+    ),
+):
+    """Scan ~/code for .repo-meta.yml files and display a summary table."""
+    df = scan_repos()
+
+    if df.empty:
+        typer.echo("No .repo-meta.yml files found under ~/code.")
+        raise typer.Exit()
+
+    typer.echo(df.to_string(index=False))
+
+    if output:
+        df.to_csv(output, index=False)
+        typer.echo(f"\nExported {len(df)} repos → {output}")

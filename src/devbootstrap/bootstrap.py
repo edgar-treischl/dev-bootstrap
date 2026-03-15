@@ -2,6 +2,7 @@ from pathlib import Path
 import shutil
 import subprocess
 
+import pandas as pd
 import yaml
 
 BASE = Path.home() / "code"
@@ -92,6 +93,33 @@ def update_all() -> None:
         subprocess.run(["git", "fetch", "--unshallow"], cwd=repo_dir, capture_output=True)
         subprocess.run(["git", "pull", "--ff-only"], cwd=repo_dir, check=True)
     print("Done.")
+
+
+def scan_repos(base: Path | None = None) -> pd.DataFrame:
+    """Scan for all .repo-meta.yml files under *base* and return them as a DataFrame.
+
+    Each row represents one repository.  List-typed fields (e.g. ``tags``,
+    ``depends_on``) are stored as comma-separated strings so the DataFrame
+    stays flat and CSV-friendly.
+    """
+    search_root = base or BASE
+    rows: list[dict] = []
+
+    for meta_file in sorted(search_root.rglob(".repo-meta.yml")):
+        with open(meta_file) as fh:
+            data: dict = yaml.safe_load(fh) or {}
+
+        # Flatten list values → comma-separated strings
+        row: dict = {"repo_path": str(meta_file.parent)}
+        for key, value in data.items():
+            if isinstance(value, list):
+                row[key] = ", ".join(str(v) for v in value if v)
+            else:
+                row[key] = value
+
+        rows.append(row)
+
+    return pd.DataFrame(rows)
 
 
 def bootstrap(
