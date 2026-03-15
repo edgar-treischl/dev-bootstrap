@@ -1,15 +1,14 @@
 name: dev-bootstrap
-description: reinforcement learning simulation environment
-dev_path: []
+description: Bla bla.
+dev_path: devOps
 role: project
+status: active
 tags:
   - setup
 language: python
 setup:
-  - pip install -e .
-  - pre-commit install
+  - poetry run dev
 env:
-  - .env.example
 services: []
 depends_on: []
 workspace: []
