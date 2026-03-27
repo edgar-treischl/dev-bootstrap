@@ -34,6 +34,24 @@ poetry install
 
 ## Usage
 
+### Discover repos (without cloning)
+
+Lists repos from GitHub and/or GitLab and prints a summary table. Optionally exports to CSV:
+
+```bash
+# GitHub only
+poetry run dev discover -gh -u <username>
+
+# GitLab only
+poetry run dev discover -gl --gitlab-token <token>
+
+# Both
+poetry run dev discover -gh -gl -u <username> --gitlab-token <token>
+
+# Export to CSV
+poetry run dev discover -gh -u <username> -o repos.csv
+```
+
 ### Bootstrap from GitHub
 
 Discovers all repos for a GitHub user or organisation, clones them, and places them under `~/code`:
@@ -55,6 +73,15 @@ poetry run dev bootstrap --gitlab-url https://gitlab.example.com
 poetry run dev bootstrap --github-user <user> --gitlab-token <token> --gitlab-url https://gitlab.example.com
 ```
 
+### Scan local repos
+
+Walks `~/code/` for `.repo-meta.yml` files and prints a summary table:
+
+```bash
+poetry run dev scan
+poetry run dev scan --output repos.csv
+```
+
 ### Update all repos
 
 Fetches full history (unshallows) and pulls every repo already under `~/code`:
@@ -67,8 +94,19 @@ poetry run dev update
 
 ```bash
 poetry run dev --help
+poetry run dev discover --help
 poetry run dev bootstrap --help
+poetry run dev scan --help
 ```
+
+### Environment variables
+
+| Variable | Description |
+|---|---|
+| `GITLAB_TOKEN` | GitLab personal access token |
+| `GITLAB_URL` | GitLab instance base URL (default: `https://gitlab.com`) |
+
+You can also place these in a `.env` file at the project root — it is loaded automatically.
 
 ---
 
@@ -95,19 +133,3 @@ depends_on: []
 | *(empty or missing)* | `~/code/misc/<name>` |
 
 
-Updated:
-
-```
-# GitHub only
-poetry run dev discover -gh -u <username>
-
-# GitLab only
-poetry run dev discover -gl --gitlab-token <token>
-
-# Both
-poetry run dev discover -gh -gl -u <username> --gitlab-token <token>
-
-# Export CSV
-poetry run dev discover -gl --gitlab-token <token> -o repos.csv
-poetry run dev discover -gh -u edgar-treischl -o gh_repos.csv
-```

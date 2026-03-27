@@ -30,6 +30,9 @@ git clone https://github.com/edgar-treischl/dev-bootstrap.git
 cd dev-bootstrap
 poetry install
 
+# Preview repos without cloning
+poetry run dev discover -gh -u <your-github-username>
+
 # Bootstrap all repos for a GitHub user
 poetry run dev bootstrap --github-user <your-github-username>
 ```

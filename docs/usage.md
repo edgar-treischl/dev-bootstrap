@@ -6,6 +6,62 @@ All commands are run through the `dev` entry point inside the Poetry environment
 poetry run dev <command> [OPTIONS]
 ```
 
+!!! tip "Environment variables"
+    `GITLAB_TOKEN` and `GITLAB_URL` can be set in your shell or in a `.env` file at the project root — both are loaded automatically.
+
+---
+
+## `discover`
+
+Lists repositories from GitHub and/or GitLab **without cloning them**. Useful for previewing what would be bootstrapped.
+
+```bash
+poetry run dev discover [OPTIONS]
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `--github`, `-gh` | `False` | Enable GitHub discovery |
+| `--gitlab`, `-gl` | `False` | Enable GitLab discovery |
+| `--user`, `-u` | — | GitHub username or organisation (required for GitHub) |
+| `--gitlab-token` | `$GITLAB_TOKEN` | GitLab private token (overrides the environment variable) |
+| `--gitlab-url` | `$GITLAB_URL` / `https://gitlab.com` | GitLab instance base URL |
+| `--output`, `-o` | — | Export discovered repos to a CSV file |
+
+### Examples
+
+=== "GitHub only"
+
+    ```bash
+    poetry run dev discover -gh -u alice
+    ```
+
+=== "GitLab only"
+
+    ```bash
+    export GITLAB_TOKEN=glpat-xxxxxxxxxxxx
+    poetry run dev discover -gl
+    ```
+
+=== "Both at once"
+
+    ```bash
+    poetry run dev discover -gh -gl -u alice --gitlab-token glpat-xxxx
+    ```
+
+=== "Export to CSV"
+
+    ```bash
+    poetry run dev discover -gh -u alice -o repos.csv
+    ```
+
+The output table format is:
+
+```
+GitHub  | my-api                    | git@github.com:alice/my-api.git
+GitLab  | frontend                  | git@gitlab.example.com:alice/frontend.git
+```
+
 ---
 
 ## `bootstrap`
@@ -18,9 +74,9 @@ poetry run dev bootstrap [OPTIONS]
 
 | Option | Default | Description |
 |---|---|---|
-| `--github-user`, `-g` | — | GitHub username or organisation to discover repos from |
+| `--github-user` | — | GitHub username or organisation to discover repos from |
 | `--gitlab-token` | `$GITLAB_TOKEN` | GitLab private token (overrides the environment variable) |
-| `--gitlab-url` | `https://gitlab.com` | GitLab instance base URL |
+| `--gitlab-url` | `$GITLAB_URL` / `https://gitlab.com` | GitLab instance base URL |
 
 ### Examples
 
@@ -102,6 +158,7 @@ See [Scanning Repos](scan.md) for more detail on the output format.
 
 ```bash
 poetry run dev --help
+poetry run dev discover --help
 poetry run dev bootstrap --help
 poetry run dev scan --help
 ```
