@@ -1,6 +1,8 @@
 from pathlib import Path
 import shutil
 import subprocess
+import json
+import urllib.request
 
 import pandas as pd
 import yaml
@@ -26,9 +28,6 @@ def discover_github(user_or_org: str) -> list[str]:
 
 def discover_gitlab(token: str, base_url: str = "https://gitlab.com") -> list[str]:
     """Return SSH URLs for all member projects of a GitLab instance."""
-    import json
-    import urllib.request
-
     req = urllib.request.Request(
         f"{base_url}/api/v4/projects?membership=true&per_page=100",
         headers={"PRIVATE-TOKEN": token},
@@ -96,12 +95,7 @@ def update_all() -> None:
 
 
 def scan_repos(base: Path | None = None) -> pd.DataFrame:
-    """Scan for all .repo-meta.yml files under *base* and return them as a DataFrame.
-
-    Each row represents one repository.  List-typed fields (e.g. ``tags``,
-    ``depends_on``) are stored as comma-separated strings so the DataFrame
-    stays flat and CSV-friendly.
-    """
+    """Scan for all .repo-meta.yml files under *base* and return them as a DataFrame."""
     search_root = base or BASE
     rows: list[dict] = []
 
@@ -123,23 +117,36 @@ def scan_repos(base: Path | None = None) -> pd.DataFrame:
 
 
 def bootstrap(
-    github_user: str | None = None,
-    gitlab_token: str | None = None,
+    github: bool = False,
+    gitlab: bool = False,
+    user: Optional[str] = None,
+    gitlab_token: Optional[str] = None,
     gitlab_url: str = "https://gitlab.com",
 ) -> None:
     """Discover repos, clone them, and place them under ~/code."""
     BASE.mkdir(parents=True, exist_ok=True)
 
     urls: list[str] = []
-    if github_user:
-        print(f"Discovering GitHub repos for '{github_user}' ...")
-        urls += discover_github(github_user)
-    if gitlab_token:
+
+    # GitHub discovery
+    if github:
+        if not user:
+            print("GitHub discovery requires --user/-u")
+            return
+        print(f"Discovering GitHub repos for '{user}' ...")
+        urls += discover_github(user)
+
+    # GitLab discovery
+    token = gitlab_token or os.environ.get("GITLAB_TOKEN")
+    if gitlab:
+        if not token:
+            print("GitLab discovery requires --gitlab-token or $GITLAB_TOKEN")
+            return
         print(f"Discovering GitLab repos at {gitlab_url} ...")
-        urls += discover_gitlab(gitlab_token, gitlab_url)
+        urls += discover_gitlab(token, gitlab_url)
 
     if not urls:
-        print("No repositories discovered. Pass --github-user or --gitlab-token.")
+        print("No repositories discovered. Pass --github/-gh or --gitlab/-gl with required info.")
         return
 
     clone_and_place(urls)

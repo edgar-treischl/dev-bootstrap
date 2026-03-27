@@ -1,0 +1,2 @@
+package: "leaflet.extras"
+via: "pak::pkg_install('trafficonese/leaflet.extras')"

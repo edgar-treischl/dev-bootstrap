@@ -93,3 +93,10 @@ depends_on: []
 |---|---|
 | `work/apps` | `~/code/work/apps/<name>` |
 | *(empty or missing)* | `~/code/misc/<name>` |
+
+
+Updated:
+
+```
+poetry run dev discover -gh -u edgar-treischl
+```

@@ -13,6 +13,7 @@ python = ">=3.14,<3.15"
 pyyaml = "^6.0"
 typer = "^0.24.1"
 pandas = "^3.0.1"
+python-dotenv = "^1.2.2"
 
 [tool.poetry.scripts]
 dev = "devbootstrap.cli:app"
@@ -22,5 +23,6 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 [dependency-groups]
 dev = [
-    "mkdocs-material (>=9.7.5,<10.0.0)"
+    "mkdocs-material (>=9.7.5,<10.0.0)",
+    "pytest (>=9.0.2,<10.0.0)"
 ]
