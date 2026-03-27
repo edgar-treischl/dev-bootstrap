@@ -98,5 +98,16 @@ depends_on: []
 Updated:
 
 ```
-poetry run dev discover -gh -u edgar-treischl
+# GitHub only
+poetry run dev discover -gh -u <username>
+
+# GitLab only
+poetry run dev discover -gl --gitlab-token <token>
+
+# Both
+poetry run dev discover -gh -gl -u <username> --gitlab-token <token>
+
+# Export CSV
+poetry run dev discover -gl --gitlab-token <token> -o repos.csv
+poetry run dev discover -gh -u edgar-treischl -o gh_repos.csv
 ```
