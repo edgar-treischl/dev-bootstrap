@@ -54,53 +54,72 @@ def scan(
 def discover(
     github: bool = typer.Option(False, "--github", "-gh", help="Enable GitHub discovery"),
     gitlab: bool = typer.Option(False, "--gitlab", "-gl", help="Enable GitLab discovery"),
-    user: Optional[str] = typer.Option(None, "--user", "-u", help="Username or org (GitHub or GitLab)"),
+    user: Optional[str] = typer.Option(None, "--user", "-u", help="Username or group (required)"),
     gitlab_token: Optional[str] = typer.Option(None, "--gitlab-token", help="GitLab token (overrides $GITLAB_TOKEN)"),
     gitlab_url: str = typer.Option(os.environ.get("GITLAB_URL", "https://gitlab.com"), "--gitlab-url", help="GitLab base URL"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ):
     """
-    Discover repositories without cloning them.
+    Discover repositories for a given user or group without cloning them.
 
     Examples:
-      # GitHub only
+      # GitHub
       poetry run dev discover -gh -u <username>
 
-      # GitLab only
-      poetry run dev discover -gl -u <username>
+      # GitLab
+      poetry run dev discover -gl -u <username-or-group>
 
-      # Both providers
+      # Both
       poetry run dev discover -gh -gl -u <username>
 
       # JSON output
       poetry run dev discover -gh -gl -u <username> --json
     """
+
+    # Require at least one provider
+    if not github and not gitlab:
+        typer.echo("Please enable at least one provider: --github or --gitlab")
+        raise typer.Exit(code=1)
+
+    # Require user for all discovery
+    if not user:
+        typer.echo("Discovery requires --user/-u")
+        raise typer.Exit(code=1)
+
     all_repos: list[str] = []
 
-    # GitHub discovery
+    # GitHub
     if github:
-        if not user:
-            typer.echo("GitHub discovery requires --user/-u")
-            raise typer.Exit(code=1)
         all_repos.extend(discover_github(user))
 
-    # GitLab discovery
-    token = gitlab_token or os.environ.get("GITLAB_TOKEN")
+    # GitLab
     if gitlab:
+        token = gitlab_token or os.environ.get("GITLAB_TOKEN")
         if not token:
             typer.echo("GitLab discovery requires --gitlab-token or $GITLAB_TOKEN")
             raise typer.Exit(code=1)
+
         all_repos.extend(discover_gitlab(token, gitlab_url))
 
+    # Deduplicate (safe guard)
+    all_repos = list(dict.fromkeys(all_repos))
+
     if not all_repos:
-        typer.echo("No repositories found.")
+        typer.echo("No repositories found. Check your user/token or provider flags.")
         raise typer.Exit(code=1)
 
     if json_output:
         typer.echo(json.dumps(all_repos, indent=2))
         return
 
+    def detect_provider(repo: str) -> str:
+        if "github" in repo.lower():
+            return "GitHub"
+        if "gitlab" in repo.lower():
+            return "GitLab"
+        return "Unknown"
+
     for repo in all_repos:
-        provider = "GitHub" if "github.com" in repo else "GitLab"
+        provider = detect_provider(repo)
         name = repo.split("/")[-1].removesuffix(".git")
-        typer.echo(f"[{provider}] {name} → {repo}")
+        typer.echo(f"{provider:<7} | {name:<25} | {repo}")

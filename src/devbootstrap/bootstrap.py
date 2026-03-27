@@ -26,15 +26,80 @@ def discover_github(user_or_org: str) -> list[str]:
     return [u for u in result.stdout.splitlines() if u.strip()]
 
 
-def discover_gitlab(token: str, base_url: str = "https://gitlab.com") -> list[str]:
-    """Return SSH URLs for all member projects of a GitLab instance."""
-    req = urllib.request.Request(
-        f"{base_url}/api/v4/projects?membership=true&per_page=100",
-        headers={"PRIVATE-TOKEN": token},
-    )
-    with urllib.request.urlopen(req) as resp:
-        projects = json.loads(resp.read())
-    return [p["ssh_url_to_repo"] for p in projects]
+
+
+import json
+import urllib.request
+from urllib.parse import quote
+from urllib.error import HTTPError
+
+def discover_gitlab(
+    token: str,
+    base_url: str = "https://gitlab.lrz.de",
+) -> list[str]:
+    """
+    Discover all GitLab repositories for the authenticated user, including:
+      - personal repos
+      - all group repos the user belongs to
+
+    Args:
+        token: Personal Access Token (PAT) with `api` scope
+        base_url: GitLab instance URL
+
+    Returns:
+        List of SSH URLs for all repositories
+    """
+    headers = {"PRIVATE-TOKEN": token}
+
+    def fetch_all(url: str) -> list[dict]:
+        """Fetch all pages of a GitLab API endpoint."""
+        results = []
+        page = 1
+
+        while True:
+            paged_url = f"{url}&page={page}"
+            print(f"DEBUG fetching: {paged_url}")  # debug output
+            req = urllib.request.Request(paged_url, headers=headers)
+
+            try:
+                with urllib.request.urlopen(req) as resp:
+                    data = json.loads(resp.read())
+                    results.extend(data)
+                    next_page = resp.headers.get("X-Next-Page")
+                    if not next_page:
+                        break
+                    page = int(next_page)
+            except HTTPError as e:
+                body = e.read().decode()
+                raise RuntimeError(f"GitLab API error {e.code}: {body}")
+
+        return results
+
+    all_repos = []
+
+    # --- Step 1: Personal repos ---
+    personal_url = f"{base_url}/api/v4/projects?owned=true&per_page=100"
+    personal_projects = fetch_all(personal_url)
+    all_repos.extend([p["ssh_url_to_repo"] for p in personal_projects])
+
+    # --- Step 2: Groups the user is a member of ---
+    groups_url = f"{base_url}/api/v4/groups?min_access_level=10&per_page=100"
+    groups = fetch_all(groups_url)
+
+    for group in groups:
+        group_id = group["id"]
+        group_projects_url = f"{base_url}/api/v4/groups/{group_id}/projects?per_page=100&include_subgroups=true"
+        group_projects = fetch_all(group_projects_url)
+        all_repos.extend([p["ssh_url_to_repo"] for p in group_projects])
+
+    # --- Deduplicate repos just in case ---
+    all_repos = list(dict.fromkeys(all_repos))
+
+    return all_repos
+
+
+
+
 
 
 def _dev_path(meta: dict) -> str:
