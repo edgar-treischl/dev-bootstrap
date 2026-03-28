@@ -3,6 +3,8 @@ import shutil
 import subprocess
 import json
 import urllib.request
+from urllib.parse import quote
+from urllib.error import HTTPError
 
 import pandas as pd
 import yaml
@@ -26,12 +28,6 @@ def discover_github(user_or_org: str) -> list[str]:
     return [u for u in result.stdout.splitlines() if u.strip()]
 
 
-
-
-import json
-import urllib.request
-from urllib.parse import quote
-from urllib.error import HTTPError
 
 def discover_gitlab(
     token: str,
@@ -58,7 +54,7 @@ def discover_gitlab(
 
         while True:
             paged_url = f"{url}&page={page}"
-            print(f"DEBUG fetching: {paged_url}")  # debug output
+            #print(f"DEBUG fetching: {paged_url}")  # debug output
             req = urllib.request.Request(paged_url, headers=headers)
 
             try:
@@ -186,7 +182,7 @@ def bootstrap(
     gitlab: bool = False,
     user: Optional[str] = None,
     gitlab_token: Optional[str] = None,
-    gitlab_url: str = "https://gitlab.com",
+    gitlab_url: str = "https://gitlab.lrz.de",
 ) -> None:
     """Discover repos, clone them, and place them under ~/code."""
     BASE.mkdir(parents=True, exist_ok=True)
@@ -214,5 +210,7 @@ def bootstrap(
         print("No repositories discovered. Pass --github/-gh or --gitlab/-gl with required info.")
         return
 
+    print(urls)
+    urls: list[str] = ['https://github.com/edgar-treischl/dev-bootstrap']
     clone_and_place(urls)
     print("Bootstrap complete!")

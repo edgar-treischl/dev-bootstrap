@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 import os
 import csv
 
+
+
 import typer
 
 from devbootstrap.bootstrap import bootstrap as _bootstrap
@@ -21,17 +23,25 @@ app = typer.Typer(help="dev-bootstrap: manage your multi-repo development enviro
 
 
 
-
-
 @app.command()
 def bootstrap(
-    github_user: Optional[str] = typer.Option(None, "--github-user", help="GitHub username/org"),
-    gitlab_token: Optional[str] = typer.Option(None, "--gitlab-token", help="GitLab token"),
-    gitlab_url: str = typer.Option(os.environ.get("GITLAB_URL", "https://gitlab.com"), "--gitlab-url", help="GitLab base URL"),
+    github: bool = typer.Option(False, "--github", "-gh"),
+    gitlab: bool = typer.Option(False, "--gitlab", "-gl"),
+    user: Optional[str] = typer.Option(None, "--user", "-u"),
+    gitlab_token: Optional[str] = typer.Option(None, "--gitlab-token"),
+    gitlab_url: str = typer.Option(os.environ.get("GITLAB_URL", "https://gitlab.lrz.de"), "--gitlab-url"),
 ):
-    """Discover, clone, and place all repositories under ~/code."""
     token = gitlab_token or os.environ.get("GITLAB_TOKEN")
-    _bootstrap(github_user=github_user, gitlab_token=token, gitlab_url=gitlab_url)
+
+    _bootstrap(
+        github=github,
+        gitlab=gitlab,
+        user=user,
+        gitlab_token=token,
+        gitlab_url=gitlab_url,
+    )
+
+
 
 
 @app.command()
@@ -63,7 +73,7 @@ def discover(
     gitlab: bool = typer.Option(False, "--gitlab", "-gl", help="Enable GitLab discovery"),
     user: Optional[str] = typer.Option(None, "--user", "-u", help="Username or group (required for GitHub)"),
     gitlab_token: Optional[str] = typer.Option(None, "--gitlab-token", help="GitLab token (overrides $GITLAB_TOKEN)"),
-    gitlab_url: str = typer.Option(os.environ.get("GITLAB_URL", "https://gitlab.com"), "--gitlab-url", help="GitLab base URL"),
+    gitlab_url: str = typer.Option(os.environ.get("GITLAB_URL", "https://gitlab.lrz.de"), "--gitlab-url", help="GitLab base URL"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Export discovered repos to CSV file"),
 ):
     """

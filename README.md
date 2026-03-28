@@ -49,7 +49,11 @@ poetry run dev discover -gl --gitlab-token <token>
 poetry run dev discover -gh -gl -u <username> --gitlab-token <token>
 
 # Export to CSV
-poetry run dev discover -gh -u <username> -o repos.csv
+poetry run dev discover -gh -u edgar-treischl -o gh_repos.csv
+
+poetry run dev discover --gitlab --user edgar.treischl
+poetry run dev discover --gitlab --user edgar.treischl -o gl_repos.csv
+
 ```
 
 ### Bootstrap from GitHub
@@ -57,14 +61,14 @@ poetry run dev discover -gh -u <username> -o repos.csv
 Discovers all repos for a GitHub user or organisation, clones them, and places them under `~/code`:
 
 ```bash
-poetry run dev bootstrap --github-user <your-github-username>
+poetry run dev bootstrap --github edgar-treischl    
 ```
 
 ### Bootstrap from GitLab
 
 ```bash
 export GITLAB_TOKEN=<your-token>
-poetry run dev bootstrap --gitlab-url https://gitlab.example.com
+poetry run dev bootstrap --gitlab --user edgar.treischl
 ```
 
 ### Bootstrap from both at once
@@ -79,7 +83,7 @@ Walks `~/code/` for `.repo-meta.yml` files and prints a summary table:
 
 ```bash
 poetry run dev scan
-poetry run dev scan --output repos.csv
+poetry run dev scan --output code_repos.csv
 ```
 
 ### Update all repos
